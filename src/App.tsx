@@ -137,13 +137,13 @@ function App() {
         <header className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="p-2 bg-blue-600 rounded-lg flex-shrink-0">
                   <BookOpen size={28} className="text-white" />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <input
-                    className="bg-transparent text-2xl sm:text-3xl font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 max-w-[200px] sm:max-w-[320px] w-full"
+                    className="bg-transparent text-2xl sm:text-3xl font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 w-full"
                     value={planNameInput}
                     onChange={(e) => setPlanNameInput(e.target.value)}
                     onBlur={handlePlanNameCommit}
@@ -157,7 +157,7 @@ function App() {
                     aria-label="Planname"
                   />
                   <p className="text-sm text-gray-400">
-                    Regelstudienzeit: {regularSemesters} Sem. · Start: {startSeason === 'winter' ? 'WS' : 'SS'}
+                    Regelstudienzeit: {regularSemesters} Semester · Start: {startSeason === 'winter' ? 'WS' : 'SS'}
                   </p>
                 </div>
               </div>
