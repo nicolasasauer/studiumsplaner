@@ -75,8 +75,8 @@ export const AddLectureModal: React.FC<AddLectureModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-700 shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-700 shadow-2xl my-auto overflow-y-auto max-h-[calc(100vh-2rem)]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-white">
             {initialLecture ? 'Veranstaltung bearbeiten' : 'Neue Veranstaltung'}
@@ -102,7 +102,7 @@ export const AddLectureModal: React.FC<AddLectureModalProps> = ({ isOpen, onClos
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">ECTS *</label>
               <input

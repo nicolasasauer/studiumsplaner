@@ -135,15 +135,15 @@ function App() {
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="min-h-screen">
         <header className="sticky top-0 z-40 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700 shadow-lg">
-          <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-600 rounded-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-blue-600 rounded-lg flex-shrink-0">
                   <BookOpen size={28} className="text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <input
-                    className="bg-transparent text-3xl font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 max-w-[320px]"
+                    className="bg-transparent text-2xl sm:text-3xl font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 max-w-[200px] sm:max-w-[320px] w-full"
                     value={planNameInput}
                     onChange={(e) => setPlanNameInput(e.target.value)}
                     onBlur={handlePlanNameCommit}
@@ -157,40 +157,46 @@ function App() {
                     aria-label="Planname"
                   />
                   <p className="text-sm text-gray-400">
-                    Regelstudienzeit: {regularSemesters} Semester · Start: {startSeason === 'winter' ? 'WS' : 'SS'}
+                    Regelstudienzeit: {regularSemesters} Sem. · Start: {startSeason === 'winter' ? 'WS' : 'SS'}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 <button
                   onClick={exportPlan}
                   className="btn-secondary flex items-center gap-2"
                   title="Plan exportieren"
+                  aria-label="Plan exportieren"
                 >
-                  <Upload size={20} />
-                  Export
+                  <Upload size={20} aria-hidden="true" />
+                  <span className="hidden sm:inline">Export</span>
                 </button>
                 <button
                   onClick={handleImport}
                   className="btn-secondary flex items-center gap-2"
                   title="Plan importieren"
+                  aria-label="Plan importieren"
                 >
-                  <Download size={20} />
-                  Import
+                  <Download size={20} aria-hidden="true" />
+                  <span className="hidden sm:inline">Import</span>
                 </button>
                 <button
                   onClick={() => setIsAddModalOpen(true)}
                   className="btn-primary flex items-center gap-2 shadow-lg hover:shadow-xl"
+                  title="Veranstaltung hinzufügen"
+                  aria-label="Veranstaltung hinzufügen"
                 >
-                  <Plus size={20} />
-                  Veranstaltung
+                  <Plus size={20} aria-hidden="true" />
+                  <span className="hidden sm:inline">Veranstaltung</span>
                 </button>
                 <button
                   onClick={addSemester}
                   className="btn-secondary flex items-center gap-2"
+                  title="Semester hinzufügen"
+                  aria-label="Semester hinzufügen"
                 >
-                  <Plus size={20} />
-                  Semester
+                  <Plus size={20} aria-hidden="true" />
+                  <span className="hidden sm:inline">Semester</span>
                 </button>
               </div>
             </div>
@@ -216,7 +222,7 @@ function App() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="mb-6 rounded-lg border border-blue-400/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-100">
             WS/SS bei Veranstaltungen ist ein Hinweis zum Turnus. Klausuren koennen weiterhin in jedem Semester geplant werden.
           </div>
@@ -233,13 +239,13 @@ function App() {
               </button>
             </div>
           ) : (
-            <div className="flex gap-6">
+            <div className="flex flex-col lg:flex-row gap-6">
               {parkingLot.length > 0 && (
-                <div className="w-80 flex-shrink-0">
+                <div className="w-full lg:w-80 lg:flex-shrink-0">
                   <ParkingLot onEdit={setEditingLectureId} />
                 </div>
               )}
-              <div className="flex-1 space-y-6">
+              <div className="flex-1 space-y-6 min-w-0">
                 {semesters.map(semester => (
                   <SemesterSection
                     key={semester.id}
