@@ -138,6 +138,7 @@ interface StudyPlanStore extends StudyPlan {
   setCurrentUser: (username: string | null) => void;
   setAuthToken: (token: string | null) => void;
   loadPlanForUser: (username: string, token: string) => Promise<void>;
+  refreshPlanFromServer: () => Promise<void>;
   initializePlan: (options: { planName: string; regularSemesters: number; startSeason: SemesterSeason }) => void;
   setPlanName: (name: string) => void;
   addSemester: () => void;
@@ -164,7 +165,15 @@ const defaultPlan: StudyPlan = {
   parkingLot: [],
 };
 
-export const useStudyPlanStore = create<StudyPlanStore>((set, get) => ({
+export const useStudyPlanStore = create<StudyPlanStore>((set, get) => {
+  // Helper: apply a plan received from the server to local state and localStorage
+  const applyServerPlan = (data: unknown) => {
+    const serverPlan = migrateStudyPlan(data);
+    set(serverPlan);
+    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(serverPlan));
+  };
+
+  return {
   currentUser: null,
   authToken: null,
   ...defaultPlan,
@@ -191,10 +200,7 @@ export const useStudyPlanStore = create<StudyPlanStore>((set, get) => ({
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (res.ok) {
-        const data = await res.json() as unknown;
-        const serverPlan = migrateStudyPlan(data);
-        set(serverPlan);
-        localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(serverPlan));
+        applyServerPlan(await res.json() as unknown);
       } else {
         // No plan on server yet – start fresh (unconfigured)
         set({ ...defaultPlan, isConfigured: false });
@@ -211,6 +217,22 @@ export const useStudyPlanStore = create<StudyPlanStore>((set, get) => ({
           set({ ...defaultPlan, isConfigured: false });
         }
       }
+    }
+  },
+
+  refreshPlanFromServer: async () => {
+    const state = get();
+    if (!state.currentUser || !state.authToken) return;
+    try {
+      const res = await fetch(`/api/plan/${encodeURIComponent(state.currentUser)}`, {
+        headers: { 'Authorization': `Bearer ${state.authToken}` },
+      });
+      if (res.ok) {
+        applyServerPlan(await res.json() as unknown);
+      }
+      // If not ok (e.g., 401 or 404), keep current state unchanged
+    } catch {
+      // Server not available – keep current state
     }
   },
 
@@ -452,4 +474,5 @@ export const useStudyPlanStore = create<StudyPlanStore>((set, get) => ({
       throw new Error('Ungültige JSON-Datei. Bitte eine gültige Studienplan-Datei auswählen.');
     }
   },
-}));
+  };
+});
