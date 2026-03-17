@@ -20,9 +20,11 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentUser = useStudyPlanStore(state => state.currentUser);
+  const authToken = useStudyPlanStore(state => state.authToken);
   const setCurrentUser = useStudyPlanStore(state => state.setCurrentUser);
   const setAuthToken = useStudyPlanStore(state => state.setAuthToken);
   const loadPlanForUser = useStudyPlanStore(state => state.loadPlanForUser);
+  const refreshPlanFromServer = useStudyPlanStore(state => state.refreshPlanFromServer);
   const planName = useStudyPlanStore(state => state.planName);
   const regularSemesters = useStudyPlanStore(state => state.regularSemesters);
   const startSeason = useStudyPlanStore(state => state.startSeason);
@@ -41,6 +43,18 @@ function App() {
   useEffect(() => {
     setPlanNameInput(planName);
   }, [planName]);
+
+  const POLL_INTERVAL_MS = 30_000;
+
+  useEffect(() => {
+    if (!currentUser || !authToken) return;
+    // loadPlanForUser already fetches fresh data on login; subsequent polls
+    // pick up any changes made on other devices within the next interval.
+    const intervalId = setInterval(() => {
+      void refreshPlanFromServer();
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, [currentUser, authToken, refreshPlanFromServer]);
 
   const handleLogin = (username: string, token: string) => {
     setCurrentUser(username);
