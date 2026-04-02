@@ -1,0 +1,43 @@
+import 'lecture.dart';
+
+class Semester {
+  final String id;
+  int number;
+  String season; // 'winter' | 'summer'
+  List<Lecture> lectures;
+
+  Semester({
+    required this.id,
+    required this.number,
+    required this.season,
+    List<Lecture>? lectures,
+  }) : lectures = lectures ?? [];
+
+  factory Semester.fromJson(Map<String, dynamic> json) => Semester(
+        id: json['id'] as String,
+        number: (json['number'] as num).toInt(),
+        season: json['season'] as String,
+        lectures: (json['lectures'] as List<dynamic>?)
+                ?.map((l) => Lecture.fromJson(l as Map<String, dynamic>))
+                .toList() ??
+            [],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'number': number,
+        'season': season,
+        'lectures': lectures.map((l) => l.toJson()).toList(),
+      };
+
+  int get totalEcts => lectures.fold(0, (s, l) => s + l.ects);
+  int get passedEcts =>
+      lectures.where((l) => l.passed).fold(0, (s, l) => s + l.ects);
+
+  double? get averageGrade {
+    final graded =
+        lectures.where((l) => l.passed && l.grade != null).toList();
+    if (graded.isEmpty) return null;
+    return graded.fold(0.0, (s, l) => s + l.grade!) / graded.length;
+  }
+}
