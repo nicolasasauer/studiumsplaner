@@ -119,6 +119,8 @@ flutter_app/
 flutter test
 ```
 
+![flutter test – 6 tests passed](https://github.com/user-attachments/assets/b36d6613-4acf-4b05-bade-1d56e4bc8a6e)
+
 Die Tests in `test/models_test.dart` pruefen:
 
 - JSON-Serialisierung und `copyWith()` von `Lecture`
