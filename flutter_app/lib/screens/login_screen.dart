@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const Icon(Icons.school, color: Colors.blue, size: 28),
             const SizedBox(width: 10),
             const Text(
-              'StudiumsPlaner',
+              'StudiPlan',
               style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,

@@ -34,11 +34,11 @@ class _MainScreenState extends State<MainScreen> {
     try {
       final json = p.exportJson();
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/studiumsplaner_export.json');
+      final file = File('${dir.path}/studi_plan_export.json');
       await file.writeAsString(json);
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'application/json')],
-        subject: 'StudiumsPlaner Export',
+        subject: 'StudiPlan Export',
       );
     } catch (e) {
       if (mounted) {

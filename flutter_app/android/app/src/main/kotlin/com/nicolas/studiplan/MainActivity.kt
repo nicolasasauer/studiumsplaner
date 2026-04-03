@@ -1,4 +1,4 @@
-package com.studiumsplaner.app
+package com.nicolas.studiplan
 
 import io.flutter.embedding.android.FlutterActivity
 

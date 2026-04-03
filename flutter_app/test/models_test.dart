@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:studiumsplaner/models/lecture.dart';
-import 'package:studiumsplaner/models/semester.dart';
-import 'package:studiumsplaner/models/study_plan.dart';
+import 'package:studi_plan/models/lecture.dart';
+import 'package:studi_plan/models/semester.dart';
+import 'package:studi_plan/models/study_plan.dart';
 
 void main() {
   group('Lecture', () {

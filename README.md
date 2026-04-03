@@ -1,15 +1,15 @@
-# StudiumsPlaner
+# StudiPlan
 
 [![Docker Pulls](https://img.shields.io/badge/ghcr.io-nicolasasauer%2Fstudiumsplaner-2496ED?style=flat-square&logo=docker&logoColor=white)](https://github.com/nicolasasauer/studiumsplaner/pkgs/container/studiumsplaner)
 [![Docker Image Size](https://ghcr-badge.egpl.dev/nicolasasauer/studiumsplaner/size)](https://github.com/nicolasasauer/studiumsplaner/pkgs/container/studiumsplaner)
 [![GitHub Stars](https://img.shields.io/github/stars/nicolasasauer/studiumsplaner?style=flat-square&logo=github)](https://github.com/nicolasasauer/studiumsplaner/stargazers)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/nicolasasauer/studiumsplaner/docker-publish.yml?branch=main&style=flat-square&label=build)](https://github.com/nicolasasauer/studiumsplaner/actions/workflows/docker-publish.yml)
 
-Wenn dir das Projekt hilft, freue ich mich über einen Stern! ⭐
+Wenn dir das Projekt hilft, freue ich mich ueber einen Stern.
 
 [![GitHub Stars](https://img.shields.io/github/stars/nicolasasauer/studiumsplaner?style=for-the-badge&logo=github&label=Star%20on%20GitHub)](https://github.com/nicolasasauer/studiumsplaner/stargazers)
 
-StudiumsPlaner ist eine Web-App zur Planung von Semestern und Klausuren mit Drag-and-drop.
+StudiPlan ist eine Web-App zur Planung von Semestern und Klausuren mit Drag-and-drop.
 Der Fokus liegt auf einer schnellen, visuellen Studienplanung mit Parkplatz-Logik fuer noch nicht zugeordnete Veranstaltungen.
 
 ## Screenshots
@@ -17,7 +17,7 @@ Der Fokus liegt auf einer schnellen, visuellen Studienplanung mit Parkplatz-Logi
 ### Ersteinrichtung
 Beim ersten Start kann der Planname, die Regelstudienzeit und das Startsemester konfiguriert werden.
 
-![Ersteinrichtung – Plan einrichten Dialog](https://github.com/user-attachments/assets/b51ed2d2-bcab-4f01-9a79-5610d3c3b8ca)
+![Ersteinrichtung - Plan einrichten Dialog](https://github.com/user-attachments/assets/b51ed2d2-bcab-4f01-9a79-5610d3c3b8ca)
 
 ### Semesteruebersicht
 Die Hauptansicht zeigt alle Semester mit Veranstaltungskarten inklusive ECTS, Note, Klausurdatum und Bestandenstatus. Der Header liefert eine kompakte Gesamtstatistik. Der Parkplatz links sammelt noch nicht zugeordnete Veranstaltungen.
@@ -32,11 +32,11 @@ Ueber den Dialog koennen neue Veranstaltungen mit Name, ECTS, Turnus (WS/SS/Beid
 ## Features
 
 - Ersteinrichtung beim ersten Start (Planname, Regelstudienzeit, Startsemester)
-- Regelstudienzeit konfigurierbar (1–20 Semester), Standard: 6 Semester
+- Regelstudienzeit konfigurierbar (1-20 Semester), Standard: 6 Semester
 - Planname direkt im Header bearbeitbar
 - Veranstaltungen mit Name, ECTS, Klausurdatum, Turnus (WS/SS/Beide), Beschreibung und Farbe
-- Bestanden-Status und Note (1,0–5,0) pro Veranstaltung erfassbar
-- Veranstaltung als „Muendliche Pruefung" markierbar: bei nicht bestandener Klausur (5,0) kann die Veranstaltung als Zweitversuch in ein anderes Semester verschoben werden; schlaegt auch dieser fehl, laesst sich eine muendliche Pruefung eintragen (Note standardmaessig 4,0)
+- Bestanden-Status und Note (1,0-5,0) pro Veranstaltung erfassbar
+- Veranstaltung als "Muendliche Pruefung" markierbar: bei nicht bestandener Klausur (5,0) kann die Veranstaltung als Zweitversuch in ein anderes Semester verschoben werden; schlaegt auch dieser fehl, laesst sich eine muendliche Pruefung eintragen (Note standardmaessig 4,0)
 - ECTS- und Notenstatistik im Header (gesamt geplant, bestanden, Durchschnittsnote)
 - Notenstatistik pro Semester (bestandene ECTS, Durchschnittsnote)
 - Drag-and-drop zwischen Semestern und Parkplatz
@@ -120,6 +120,7 @@ docker-compose up -d
 App laeuft dann auf `http://localhost:3000`
 
 Stoppen:
+
 ```bash
 docker-compose down
 ```

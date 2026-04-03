@@ -8,18 +8,18 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => StudyPlanProvider()..initialize(),
-      child: const StudiumsPlanerApp(),
+      child: const StudiPlanApp(),
     ),
   );
 }
 
-class StudiumsPlanerApp extends StatelessWidget {
-  const StudiumsPlanerApp({super.key});
+class StudiPlanApp extends StatelessWidget {
+  const StudiPlanApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'StudiumsPlaner',
+      title: 'StudiPlan',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

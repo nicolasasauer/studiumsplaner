@@ -109,7 +109,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
             ]),
             const SizedBox(height: 8),
             const Text(
-                'Gib die URL deines StudiumsPlaner-Servers ein.',
+                'Gib die URL deines StudiPlan-Servers ein.',
                 style:
                     TextStyle(color: Colors.white54, fontSize: 13)),
             const SizedBox(height: 16),

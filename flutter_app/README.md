@@ -1,6 +1,6 @@
-# StudiumsPlaner – Flutter App
+# StudiPlan - Flutter App
 
-Die Flutter-App ist der mobile Begleiter zum [StudiumsPlaner](../README.md).
+Die Flutter-App ist der mobile Begleiter zu [StudiPlan](../README.md).
 Sie bietet dieselbe Planungsfunktionalitaet wie die Web-App, jedoch als native Android-App mit Serversynchronisierung.
 
 ## Features
@@ -9,7 +9,7 @@ Sie bietet dieselbe Planungsfunktionalitaet wie die Web-App, jedoch als native A
 - Benutzerverwaltung: Benutzer anlegen, auflisten, einloggen
 - Ersteinrichtung des Plans (Planname, Regelstudienzeit, Startsemester)
 - Veranstaltungen mit Name, ECTS, Turnus (WS/SS/Beide), Klausurdatum, Beschreibung und Farbe
-- Bestanden-Status und Note (1,0–5,0) pro Veranstaltung
+- Bestanden-Status und Note (1,0-5,0) pro Veranstaltung
 - Muendliche-Pruefung-Markierung (Note standardmaessig 4,0)
 - ECTS- und Notenstatistik im Header (gesamt geplant, bestanden, Durchschnittsnote)
 - Notenstatistik pro Semester
@@ -27,7 +27,7 @@ Sie bietet dieselbe Planungsfunktionalitaet wie die Web-App, jedoch als native A
 ## Screenshots
 
 ### Anmelden
-Beim Start meldet man sich mit einem bestehenden Benutzer an oder legt einen neuen an. Die Server-URL ist jederzeit über den Einstellungsbutton konfigurierbar.
+Beim Start meldet man sich mit einem bestehenden Benutzer an oder legt einen neuen an. Die Server-URL ist jederzeit ueber den Einstellungsbutton konfigurierbar.
 
 ![Login-Bildschirm mit Benutzerliste](https://github.com/user-attachments/assets/2467ed86-43f0-45ec-b472-9251326b34c6)
 
@@ -37,7 +37,7 @@ Die Hauptansicht zeigt alle Semester mit Veranstaltungskarten inklusive ECTS, No
 ![Hauptansicht mit Semestern und ECTS-Statistik](https://github.com/user-attachments/assets/82de6d1f-2384-483f-ab55-202aba6d84ac)
 
 ### Veranstaltung anlegen
-Ueber den Dialog koennen neue Veranstaltungen mit Name, ECTS, Turnus (WS/SS/Beide), Semester, Klausurdatum, Bestandenstatus, Note (Slider 1,0–5,0), Mündliche-Prüfung-Markierung, Beschreibung und Farbe angelegt werden.
+Ueber den Dialog koennen neue Veranstaltungen mit Name, ECTS, Turnus (WS/SS/Beide), Semester, Klausurdatum, Bestandenstatus, Note (Slider 1,0-5,0), muendliche-Pruefung-Markierung, Beschreibung und Farbe angelegt werden.
 
 ![Dialog zum Anlegen einer neuen Veranstaltung](https://github.com/user-attachments/assets/7717c6d5-a78e-457a-b4d6-2d10d4e5bbbe)
 
@@ -51,17 +51,17 @@ Eine Veranstaltung kann weiterhin in jedem Semester geplant werden; bei Abweichu
 - Flutter 3 (Dart, SDK `>=3.3.0 <4.0.0`)
 - Provider (State Management)
 - http (REST-API-Client)
-- shared\_preferences (Lokale Persistenz)
+- shared_preferences (Lokale Persistenz)
 - uuid (ID-Generierung)
-- file\_picker (JSON-Import)
-- share\_plus (JSON-Export)
-- path\_provider (Temporaere Dateien)
+- file_picker (JSON-Import)
+- share_plus (JSON-Export)
+- path_provider (Temporaere Dateien)
 
 ## Voraussetzungen
 
 - Flutter SDK 3.x ([flutter.dev](https://flutter.dev/docs/get-started/install))
 - Android SDK / Android Studio (fuer Android-Builds)
-- Laufende Instanz des StudiumsPlaner-Servers (siehe [Docker-Anleitung](../README.md#docker--docker-compose))
+- Laufende Instanz des StudiPlan-Servers (siehe [Docker-Anleitung](../README.md#docker--docker-compose))
 
 ## Schnellstart
 
@@ -87,7 +87,7 @@ flutter analyze       # Statische Code-Analyse (flutter_lints)
 
 ## Serverkonfiguration
 
-Die App kommuniziert mit dem StudiumsPlaner-Backend:
+Die App kommuniziert mit dem StudiPlan-Backend:
 
 | Endpunkt | Methode | Beschreibung |
 |---|---|---|
