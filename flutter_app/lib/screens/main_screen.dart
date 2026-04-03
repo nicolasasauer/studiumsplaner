@@ -212,10 +212,21 @@ class _MainScreenState extends State<MainScreen> {
                     color: Colors.white70, size: 20),
                 tooltip: 'Plan einrichten',
                 onPressed: () => _openSetup(p)),
+            if (p.localMode)
+              const Tooltip(
+                message: 'Lokaler Modus – keine Serververbindung',
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(Icons.phone_android,
+                      color: Colors.amber, size: 18),
+                ),
+              ),
             IconButton(
                 icon: const Icon(Icons.logout,
                     color: Colors.white70, size: 20),
-                tooltip: 'Abmelden',
+                tooltip: p.localMode
+                    ? 'Lokalen Modus verlassen'
+                    : 'Abmelden',
                 onPressed: () => p.logout()),
           ],
         ),

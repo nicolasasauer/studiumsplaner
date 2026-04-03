@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   List<String> _users = [];
   bool _loadingUsers = false;
+  String? _fetchError;
   bool _showCreate = false;
   String? _pendingUser;
   bool _needsPassword = false;
@@ -41,10 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _fetchUsers() async {
     final provider = context.read<StudyPlanProvider>();
     if (provider.baseUrl.isEmpty) return;
-    setState(() => _loadingUsers = true);
+    setState(() {
+      _loadingUsers = true;
+      _fetchError = null;
+    });
     try {
-      final users = await provider.getUsers();
-      if (mounted) setState(() => _users = users);
+      final result = await provider.getUsersResult();
+      if (mounted) {
+        setState(() {
+          _users = result.users;
+          _fetchError = result.error;
+        });
+      }
     } finally {
       if (mounted) setState(() => _loadingUsers = false);
     }
@@ -86,6 +95,10 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result != null) _showError(result);
   }
 
+  Future<void> _useLocally() async {
+    await context.read<StudyPlanProvider>().enterLocalMode();
+  }
+
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
@@ -114,6 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       _buildCreateCard(provider)
                     else
                       _buildUserListCard(provider),
+                    const SizedBox(height: 12),
+                    _buildLocalModeButton(provider),
                   ],
                 ),
               ),
@@ -167,12 +182,22 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Kein Server konfiguriert. Bitte Einstellungen öffnen.',
+                'Kein Server konfiguriert. Bitte Einstellungen öffnen oder lokal verwenden.',
                 style: TextStyle(color: Colors.orange),
               ),
             ),
           ],
         ),
+      );
+
+  Widget _buildLocalModeButton(StudyPlanProvider provider) => OutlinedButton.icon(
+        icon: const Icon(Icons.phone_android),
+        label: const Text('Lokal verwenden (kein Server)'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.white70,
+          side: const BorderSide(color: Colors.white24),
+        ),
+        onPressed: provider.isLoading ? null : _useLocally,
       );
 
   Widget _buildUserListCard(StudyPlanProvider provider) => Card(
@@ -190,6 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               if (_loadingUsers)
                 const Center(child: CircularProgressIndicator())
+              else if (_fetchError != null)
+                _buildFetchError(_fetchError!)
               else if (_users.isEmpty && provider.baseUrl.isNotEmpty)
                 const Text('Keine Benutzer vorhanden.',
                     style: TextStyle(color: Colors.white54))
@@ -227,6 +254,27 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
+        ),
+      );
+
+  Widget _buildFetchError(String error) => Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.red.shade900.withAlpha(80),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.shade700),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Server nicht erreichbar: $error\nBitte URL in den Einstellungen prüfen.',
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
+          ],
         ),
       );
 
