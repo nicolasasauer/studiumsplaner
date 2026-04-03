@@ -17,12 +17,14 @@ class StudyPlanProvider extends ChangeNotifier {
   String _baseUrl = '';
   StudyPlan _plan = StudyPlan();
   bool _isLoading = false;
+  bool _localMode = false;
   Timer? _syncTimer;
 
   String get baseUrl => _baseUrl;
   StudyPlan get plan => _plan;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => currentUser != null;
+  bool get localMode => _localMode;
 
   ApiService get _api => ApiService(_baseUrl);
 
@@ -30,22 +32,28 @@ class StudyPlanProvider extends ChangeNotifier {
 
   Future<void> initialize() async {
     _baseUrl = await _storage.loadBaseUrl();
-    final user = await _storage.loadUser();
-    if (user != null) {
-      currentUser = user['username'];
-      authToken = user['token'];
+    _localMode = await _storage.loadLocalMode();
+    if (_localMode) {
+      currentUser = 'lokal';
+    } else {
+      final user = await _storage.loadUser();
+      if (user != null) {
+        currentUser = user['username'];
+        authToken = user['token'];
+      }
     }
     final saved = await _storage.loadPlan();
     if (saved != null) _plan = saved;
     notifyListeners();
-    if (isLoggedIn) {
+    if (isLoggedIn && !_localMode) {
       await refreshPlanFromServer();
       _startSyncTimer();
     }
   }
 
   Future<void> updateBaseUrl(String url) async {
-    _baseUrl = url.trim();
+    // Strip trailing slash to prevent double-slash in API paths
+    _baseUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
     await _storage.saveBaseUrl(_baseUrl);
     notifyListeners();
   }
@@ -55,6 +63,11 @@ class StudyPlanProvider extends ChangeNotifier {
   Future<List<String>> getUsers() async {
     final r = await _api.getUsers();
     return r.data ?? [];
+  }
+
+  Future<({List<String> users, String? error})> getUsersResult() async {
+    final r = await _api.getUsers();
+    return (users: r.data ?? [], error: r.error);
   }
 
   /// Returns null on success, 'REQUIRES_PASSWORD' if password is needed,
@@ -108,13 +121,28 @@ class StudyPlanProvider extends ChangeNotifier {
     _syncTimer?.cancel();
     currentUser = null;
     authToken = null;
+    _localMode = false;
     await _storage.clearUser();
+    await _storage.saveLocalMode(false);
+    notifyListeners();
+  }
+
+  /// Switch to local-only mode — no server required.
+  Future<void> enterLocalMode() async {
+    _syncTimer?.cancel();
+    _localMode = true;
+    currentUser = 'lokal';
+    authToken = null;
+    await _storage.saveLocalMode(true);
+    final saved = await _storage.loadPlan();
+    if (saved != null) _plan = saved;
     notifyListeners();
   }
 
   // ─── Server Sync ──────────────────────────────────────────────────────────
 
   Future<void> refreshPlanFromServer() async {
+    if (_localMode) return;
     if (currentUser == null || authToken == null) return;
     final r = await _api.getPlan(currentUser!, authToken!);
     if (r.isSuccess && r.data != null) {
@@ -132,7 +160,7 @@ class StudyPlanProvider extends ChangeNotifier {
 
   Future<void> _save() async {
     await _storage.savePlan(_plan);
-    if (currentUser != null && authToken != null) {
+    if (!_localMode && currentUser != null && authToken != null) {
       await _api.savePlan(currentUser!, authToken!, _plan.toJson());
     }
     notifyListeners();

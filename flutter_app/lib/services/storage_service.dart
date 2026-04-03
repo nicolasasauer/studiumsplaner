@@ -53,4 +53,16 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kBaseUrl) ?? '';
   }
+
+  static const _kLocalMode = 'sp_local_mode';
+
+  Future<void> saveLocalMode(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kLocalMode, enabled);
+  }
+
+  Future<bool> loadLocalMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kLocalMode) ?? false;
+  }
 }
