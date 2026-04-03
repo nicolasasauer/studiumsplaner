@@ -16,7 +16,7 @@ class SemesterSection extends StatefulWidget {
 }
 
 class _SemesterSectionState extends State<SemesterSection> {
-  bool _collapsed = false;
+  bool _collapsed = true;
 
   Semester get sem => widget.semester;
   StudyPlanProvider get p => widget.provider;
@@ -99,18 +99,6 @@ class _SemesterSectionState extends State<SemesterSection> {
                 _miniChip('Ø ${avg.toStringAsFixed(1)}', Colors.purple),
                 const SizedBox(width: 4),
               ],
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.sort,
-                    color: Colors.white54, size: 18),
-                tooltip: 'Sortieren',
-                onSelected: (v) => p.sortSemesterLectures(sem.id, v),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                      value: 'date', child: Text('Nach Prüfungsdatum')),
-                  PopupMenuItem(
-                      value: 'ects', child: Text('Nach ECTS')),
-                ],
-              ),
               IconButton(
                 icon: const Icon(Icons.add,
                     color: Colors.white54, size: 18),
@@ -120,14 +108,30 @@ class _SemesterSectionState extends State<SemesterSection> {
                 tooltip: 'Veranstaltung hinzufügen',
                 onPressed: () => _addLecture(context),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 18),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert,
+                    color: Colors.white54, size: 18),
+                tooltip: 'Weitere Optionen',
                 padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints(minWidth: 28, minHeight: 28),
-                tooltip: 'Semester löschen',
-                onPressed: () => _delete(context),
+                onSelected: (v) {
+                  if (v == 'delete') {
+                    _delete(context);
+                  } else {
+                    p.sortSemesterLectures(sem.id, v);
+                  }
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                      value: 'date', child: Text('Sortieren: Prüfungsdatum')),
+                  const PopupMenuItem(
+                      value: 'ects', child: Text('Sortieren: ECTS')),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Semester löschen',
+                        style: TextStyle(color: Colors.red.shade400)),
+                  ),
+                ],
               ),
             ]),
           ),
