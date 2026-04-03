@@ -7,7 +7,8 @@ Future<void> main() => integrationDriver(
         if (data == null) return;
         final rawResults = data['screenshotResults'];
         if (rawResults == null) return;
-        final screenshotResults = Map<String, String>.from(rawResults as Map);
+        if (rawResults is! Map) return;
+        final screenshotResults = rawResults.cast<String, String>();
         final dir = Directory('screenshots');
         if (!dir.existsSync()) dir.createSync(recursive: true);
         for (final entry in screenshotResults.entries) {
