@@ -119,7 +119,6 @@ class _SemesterSectionState extends State<SemesterSection> {
                     onPressed: () => _addLecture(context),
                   ),
                   PopupMenuButton<String>(
-                    visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.more_vert,
                         color: Colors.white54, size: 20),
                     tooltip: 'Weitere Optionen',
