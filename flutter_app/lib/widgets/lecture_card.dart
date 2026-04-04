@@ -70,52 +70,61 @@ class _LectureCardState extends State<LectureCard> {
     final p = context.read<StudyPlanProvider>();
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: const Color(0xFF1E293B),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Verschieben: ${widget.lecture.name}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 15)),
-            ),
-            const Divider(height: 1),
-            if (widget.lecture.semesterId != null)
-              ListTile(
-                leading: const Icon(Icons.local_parking,
-                    color: Colors.orange),
-                title: const Text('Parkplatz'),
-                onTap: () {
-                  Navigator.pop(context);
-                  p.moveLectureToParkingLot(
-                      widget.lecture.id, widget.lecture.semesterId!);
-                },
-              ),
-            ...widget.allSemesters
-                .where((s) => s.id != widget.lecture.semesterId)
-                .map((sem) => ListTile(
-                      leading: Icon(Icons.calendar_today,
-                          color: sem.season == 'winter'
-                              ? Colors.blue
-                              : Colors.orange),
-                      title: Text(
-                          '${sem.number}. Semester (${sem.season == 'winter' ? 'WS' : 'SS'})'),
-                      subtitle: Text('${sem.lectures.length} VL'),
+      builder: (_) {
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.75;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text('Verschieben: ${widget.lecture.name}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                  ),
+                  const Divider(height: 1),
+                  if (widget.lecture.semesterId != null)
+                    ListTile(
+                      leading: const Icon(Icons.local_parking,
+                          color: Colors.orange),
+                      title: const Text('Parkplatz'),
                       onTap: () {
                         Navigator.pop(context);
-                        p.moveLectureToSemester(widget.lecture.id,
-                            widget.lecture.semesterId, sem.id);
+                        p.moveLectureToParkingLot(
+                            widget.lecture.id, widget.lecture.semesterId!);
                       },
-                    )),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+                    ),
+                  ...widget.allSemesters
+                      .where((s) => s.id != widget.lecture.semesterId)
+                      .map((sem) => ListTile(
+                            leading: Icon(Icons.calendar_today,
+                                color: sem.season == 'winter'
+                                    ? Colors.blue
+                                    : Colors.orange),
+                            title: Text(
+                                '${sem.number}. Semester (${sem.season == 'winter' ? 'WS' : 'SS'})'),
+                            subtitle: Text('${sem.lectures.length} VL'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              p.moveLectureToSemester(widget.lecture.id,
+                                  widget.lecture.semesterId, sem.id);
+                            },
+                          )),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

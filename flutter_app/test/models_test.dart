@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studi_plan/models/lecture.dart';
 import 'package:studi_plan/models/semester.dart';
@@ -91,6 +92,61 @@ void main() {
       final restored = StudyPlan.fromJson(plan.toJson());
       expect(restored.planName, 'Test');
       expect(restored.regularSemesters, 6);
+    });
+
+    test('fromJson handles decoded nested maps from persisted JSON', () {
+      final plan = StudyPlan(
+        planName: 'Persisted',
+        regularSemesters: 6,
+        startSeason: 'winter',
+        isConfigured: true,
+        semesters: [
+          Semester(
+            id: 's1',
+            number: 1,
+            season: 'winter',
+            lectures: [
+              Lecture(
+                id: 'l1',
+                name: 'Mathe',
+                ects: 5,
+                season: 'winter',
+                color: '#FF6B6B',
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final decoded = jsonDecode(jsonEncode(plan.toJson())) as Map;
+      final restored = StudyPlan.fromJson(Map<String, dynamic>.from(decoded));
+
+      expect(restored.isConfigured, isTrue);
+      expect(restored.semesters, hasLength(1));
+      expect(restored.semesters.first.lectures, hasLength(1));
+      expect(restored.semesters.first.lectures.first.name, 'Mathe');
+    });
+
+    test('fromJson infers configured for older persisted plans without flag', () {
+      final decoded = {
+        'planName': 'Altbestand',
+        'regularSemesters': 6,
+        'startSeason': 'winter',
+        'semesters': [
+          {
+            'id': 'semester-1',
+            'number': 1,
+            'season': 'winter',
+            'lectures': [],
+          },
+        ],
+        'parkingLot': [],
+      };
+
+      final restored = StudyPlan.fromJson(decoded);
+
+      expect(restored.isConfigured, isTrue);
+      expect(restored.isEffectivelyConfigured, isTrue);
     });
 
     test('passedEcts counts across semesters and parking lot', () {

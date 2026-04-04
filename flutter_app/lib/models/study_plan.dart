@@ -19,20 +19,31 @@ class StudyPlan {
   })  : semesters = semesters ?? [],
         parkingLot = parkingLot ?? [];
 
-  factory StudyPlan.fromJson(Map<String, dynamic> json) => StudyPlan(
-        planName: json['planName'] as String? ?? 'Mein Studienplan',
-        regularSemesters: (json['regularSemesters'] as num?)?.toInt() ?? 6,
-        startSeason: json['startSeason'] as String? ?? 'winter',
-        isConfigured: json['isConfigured'] as bool? ?? false,
-        semesters: (json['semesters'] as List<dynamic>?)
-                ?.map((s) => Semester.fromJson(s as Map<String, dynamic>))
-                .toList() ??
-            [],
-        parkingLot: (json['parkingLot'] as List<dynamic>?)
-                ?.map((l) => Lecture.fromJson(l as Map<String, dynamic>))
-                .toList() ??
-            [],
-      );
+  factory StudyPlan.fromJson(Map<String, dynamic> json) {
+    final semesters = (json['semesters'] as List<dynamic>?)
+            ?.whereType<Map>()
+            .map((s) => Semester.fromJson(Map<String, dynamic>.from(s)))
+            .toList() ??
+        [];
+    final parkingLot = (json['parkingLot'] as List<dynamic>?)
+            ?.whereType<Map>()
+            .map((l) => Lecture.fromJson(Map<String, dynamic>.from(l)))
+            .toList() ??
+        [];
+    final inferredConfigured =
+        semesters.isNotEmpty || parkingLot.isNotEmpty;
+
+    return StudyPlan(
+      planName: json['planName'] as String? ?? 'Mein Studienplan',
+      regularSemesters: (json['regularSemesters'] as num?)?.toInt() ?? 6,
+      startSeason: json['startSeason'] as String? ?? 'winter',
+      isConfigured: json.containsKey('isConfigured')
+          ? json['isConfigured'] as bool? ?? inferredConfigured
+          : inferredConfigured,
+      semesters: semesters,
+      parkingLot: parkingLot,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'planName': planName,
@@ -42,6 +53,9 @@ class StudyPlan {
         'semesters': semesters.map((s) => s.toJson()).toList(),
         'parkingLot': parkingLot.map((l) => l.toJson()).toList(),
       };
+
+  bool get isEffectivelyConfigured =>
+      isConfigured || semesters.isNotEmpty || parkingLot.isNotEmpty;
 
   int get totalEcts {
     final semEcts = semesters.fold(0, (s, sem) => s + sem.totalEcts);

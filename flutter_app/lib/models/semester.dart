@@ -18,7 +18,8 @@ class Semester {
         number: (json['number'] as num).toInt(),
         season: json['season'] as String,
         lectures: (json['lectures'] as List<dynamic>?)
-                ?.map((l) => Lecture.fromJson(l as Map<String, dynamic>))
+                ?.whereType<Map>()
+                .map((l) => Lecture.fromJson(Map<String, dynamic>.from(l)))
                 .toList() ??
             [],
       );

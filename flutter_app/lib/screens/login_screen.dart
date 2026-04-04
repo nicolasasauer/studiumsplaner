@@ -27,8 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _fetchUsers());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _fetchUsers());
   }
 
   @override
@@ -41,11 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _fetchUsers() async {
     final provider = context.read<StudyPlanProvider>();
-    if (provider.baseUrl.isEmpty) return;
+    if (!provider.localMode && provider.baseUrl.isEmpty) return;
+
     setState(() {
       _loadingUsers = true;
       _fetchError = null;
     });
+
     try {
       final result = await provider.getUsersResult();
       if (mounted) {
@@ -75,7 +76,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade700),
+              backgroundColor: Colors.red.shade700,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Löschen'),
           ),
@@ -83,9 +85,11 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
+
     final provider = context.read<StudyPlanProvider>();
     final err = await provider.deleteUserByName(username);
     if (!mounted) return;
+
     if (err != null) {
       _showError('Fehler: $err');
     } else {
@@ -97,6 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final provider = context.read<StudyPlanProvider>();
     final result = await provider.login(username, null);
     if (!mounted) return;
+
     if (result == 'REQUIRES_PASSWORD') {
       setState(() {
         _pendingUser = username;
@@ -122,6 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError('Benutzername darf nicht leer sein');
       return;
     }
+
     final provider = context.read<StudyPlanProvider>();
     final pw = _newPwCtrl.text;
     final result = await provider.createUser(name, pw.isEmpty ? null : pw);
@@ -131,6 +137,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _useLocally() async {
     await context.read<StudyPlanProvider>().enterLocalMode();
+    if (!mounted) return;
+    _resetLoginState();
+    await _fetchUsers();
+  }
+
+  Future<void> _useServerMode() async {
+    await context.read<StudyPlanProvider>().leaveLocalMode();
+    if (!mounted) return;
+    _resetLoginState();
+    await _fetchUsers();
+  }
+
+  void _resetLoginState() {
+    setState(() {
+      _users = [];
+      _fetchError = null;
+      _showCreate = false;
+      _pendingUser = null;
+      _needsPassword = false;
+      _pwCtrl.clear();
+      _newUserCtrl.clear();
+      _newPwCtrl.clear();
+    });
   }
 
   void _showError(String msg) {
@@ -153,7 +182,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (provider.baseUrl.isEmpty) _buildNoBanner(),
+                    if (!provider.localMode && provider.baseUrl.isEmpty)
+                      _buildNoBanner(),
                     const SizedBox(height: 16),
                     if (_needsPassword && _pendingUser != null)
                       _buildPasswordCard(provider)
@@ -175,8 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildHeader(BuildContext context) => Container(
         color: const Color(0xFF0F172A),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             const Icon(Icons.school, color: Colors.blue, size: 28),
@@ -184,9 +213,10 @@ class _LoginScreenState extends State<LoginScreen> {
             const Text(
               'StudiPlan',
               style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const Spacer(),
             IconButton(
@@ -194,8 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
               tooltip: 'Server-Einstellungen',
               onPressed: () async {
                 await showDialog(
-                    context: context,
-                    builder: (_) => const ServerSettingsDialog());
+                  context: context,
+                  builder: (_) => const ServerSettingsDialog(),
+                );
                 _fetchUsers();
               },
             ),
@@ -224,14 +255,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
 
-  Widget _buildLocalModeButton(StudyPlanProvider provider) => OutlinedButton.icon(
-        icon: const Icon(Icons.phone_android),
-        label: const Text('Lokal verwenden (kein Server)'),
+  Widget _buildLocalModeButton(StudyPlanProvider provider) =>
+      OutlinedButton.icon(
+        icon: Icon(
+          provider.localMode ? Icons.cloud_outlined : Icons.phone_android,
+        ),
+        label: Text(
+          provider.localMode
+              ? 'Server verwenden'
+              : 'Lokal verwenden (kein Server)',
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white70,
           side: const BorderSide(color: Colors.white24),
         ),
-        onPressed: provider.isLoading ? null : _useLocally,
+        onPressed: provider.isLoading
+            ? null
+            : provider.localMode
+                ? _useServerMode
+                : _useLocally,
       );
 
   Widget _buildUserListCard(StudyPlanProvider provider) => Card(
@@ -240,20 +282,32 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Anmelden',
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                provider.localMode ? 'Lokal anmelden' : 'Anmelden',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
-              const Text('Wähle einen Benutzer oder erstelle einen neuen.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              Text(
+                provider.localMode
+                    ? 'Wähle einen lokalen Benutzer oder erstelle einen neuen.'
+                    : 'Wähle einen Benutzer oder erstelle einen neuen.',
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
               const SizedBox(height: 16),
               if (_loadingUsers)
                 const Center(child: CircularProgressIndicator())
               else if (_fetchError != null)
                 _buildFetchError(_fetchError!)
-              else if (_users.isEmpty && provider.baseUrl.isNotEmpty)
-                const Text('Keine Benutzer vorhanden.',
-                    style: TextStyle(color: Colors.white54))
+              else if (_users.isEmpty)
+                Text(
+                  provider.localMode
+                      ? 'Noch keine lokalen Benutzer vorhanden.'
+                      : provider.baseUrl.isNotEmpty
+                          ? 'Keine Benutzer vorhanden.'
+                          : 'Kein Server konfiguriert.',
+                  style: const TextStyle(color: Colors.white54),
+                )
               else
                 ListView.separated(
                   shrinkWrap: true,
@@ -265,23 +319,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: Colors.blue.shade700,
-                        child: Text(u[0].toUpperCase(),
-                            style:
-                                const TextStyle(color: Colors.white)),
+                        child: Text(
+                          u[0].toUpperCase(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                       title: Text(u),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.red, size: 20),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                             tooltip: 'Konto löschen',
                             onPressed: () => _deleteUser(u),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward_ios,
-                              size: 16),
+                          const Icon(Icons.arrow_forward_ios, size: 16),
                         ],
                       ),
                       onTap: () => _loginUser(u),
@@ -293,9 +350,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.person_add),
-                  label: const Text('Neuen Benutzer erstellen'),
-                  onPressed: () =>
-                      setState(() => _showCreate = true),
+                  label: Text(
+                    provider.localMode
+                        ? 'Neuen lokalen Benutzer erstellen'
+                        : 'Neuen Benutzer erstellen',
+                  ),
+                  onPressed: () => setState(() => _showCreate = true),
                 ),
               ),
             ],
@@ -330,20 +390,24 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => setState(() {
-                    _needsPassword = false;
-                    _pendingUser = null;
-                  }),
-                ),
-                Text(
-                  'Passwort für $_pendingUser',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ]),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => setState(() {
+                      _needsPassword = false;
+                      _pendingUser = null;
+                    }),
+                  ),
+                  Text(
+                    'Passwort für $_pendingUser',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _pwCtrl,
@@ -351,11 +415,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Passwort',
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePw
-                        ? Icons.visibility
-                        : Icons.visibility_off),
-                    onPressed: () =>
-                        setState(() => _obscurePw = !_obscurePw),
+                    icon: Icon(
+                      _obscurePw ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () => setState(() => _obscurePw = !_obscurePw),
                   ),
                 ),
                 onSubmitted: (_) => _submitPassword(),
@@ -381,22 +444,27 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () =>
-                      setState(() => _showCreate = false),
-                ),
-                const Text('Neuen Benutzer erstellen',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold)),
-              ]),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => setState(() => _showCreate = false),
+                  ),
+                  Text(
+                    provider.localMode
+                        ? 'Neuen lokalen Benutzer erstellen'
+                        : 'Neuen Benutzer erstellen',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _newUserCtrl,
-                decoration:
-                    const InputDecoration(labelText: 'Benutzername *'),
+                decoration: const InputDecoration(labelText: 'Benutzername *'),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
@@ -406,11 +474,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Passwort (optional)',
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureNewPw
-                        ? Icons.visibility
-                        : Icons.visibility_off),
-                    onPressed: () => setState(
-                        () => _obscureNewPw = !_obscureNewPw),
+                    icon: Icon(
+                      _obscureNewPw
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureNewPw = !_obscureNewPw),
                   ),
                 ),
                 onSubmitted: (_) => _createUser(),

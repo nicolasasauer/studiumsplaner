@@ -23,6 +23,8 @@ class _MainScreenState extends State<MainScreen> {
   final _nameCtrl = TextEditingController();
   bool _editingName = false;
   bool _bannerDismissed = false;
+  bool _setupDialogScheduled = false;
+  bool _setupDialogOpen = false;
 
   @override
   void dispose() {
@@ -117,17 +119,62 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void _openSetup(StudyPlanProvider p, {bool barrierDismissible = true}) {
-    showDialog(
-      context: context,
-      barrierDismissible: barrierDismissible,
-      builder: (_) => PlanSetupDialog(
-        initialName: p.plan.planName,
-        initialSemesters: p.plan.regularSemesters,
-        initialSeason: p.plan.startSeason,
-        onSave: (name, n, season) => p.initializePlan(name, n, season),
-      ),
-    );
+  Future<void> _openSetup(StudyPlanProvider p,
+      {bool barrierDismissible = true}) async {
+    if (_setupDialogOpen) return;
+
+    _setupDialogOpen = true;
+    try {
+      await showDialog(
+        context: context,
+        barrierDismissible: barrierDismissible,
+        builder: (_) => PlanSetupDialog(
+          initialName: p.plan.planName,
+          initialSemesters: p.plan.regularSemesters,
+          initialSeason: p.plan.startSeason,
+          onSave: (name, n, season) => p.initializePlan(name, n, season),
+        ),
+      );
+    } finally {
+      _setupDialogOpen = false;
+    }
+  }
+
+  void _closeSetupIfNoLongerNeeded(StudyPlanProvider p) {
+    if (!_setupDialogOpen || !p.plan.isEffectivelyConfigured) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_setupDialogOpen) return;
+      Navigator.of(context, rootNavigator: true).maybePop();
+    });
+  }
+
+  void _scheduleInitialSetupIfNeeded(StudyPlanProvider p) {
+    if (_setupDialogScheduled ||
+        _setupDialogOpen ||
+        !p.isLoggedIn ||
+        p.plan.isEffectivelyConfigured) {
+      return;
+    }
+
+    _setupDialogScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        _setupDialogScheduled = false;
+        return;
+      }
+
+      final provider = context.read<StudyPlanProvider>();
+      if (!provider.isLoggedIn || provider.plan.isEffectivelyConfigured) {
+        _setupDialogScheduled = false;
+        return;
+      }
+
+      await _openSetup(provider, barrierDismissible: false);
+      if (mounted) {
+        _setupDialogScheduled = false;
+      }
+    });
   }
 
   @override
@@ -135,10 +182,8 @@ class _MainScreenState extends State<MainScreen> {
     final p = context.watch<StudyPlanProvider>();
     final plan = p.plan;
 
-    if (!plan.isConfigured) {
-      WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _openSetup(p, barrierDismissible: false));
-    }
+    _closeSetupIfNoLongerNeeded(p);
+    _scheduleInitialSetupIfNeeded(p);
 
     return Scaffold(
       body: SafeArea(
@@ -265,9 +310,7 @@ class _MainScreenState extends State<MainScreen> {
             IconButton(
                 icon: const Icon(Icons.logout,
                     color: Colors.white70, size: 20),
-                tooltip: p.localMode
-                    ? 'Lokalen Modus verlassen'
-                    : 'Abmelden',
+                tooltip: 'Abmelden',
                 onPressed: () => p.logout()),
           ],
         ),
