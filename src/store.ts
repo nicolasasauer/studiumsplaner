@@ -799,16 +799,23 @@ export const useStudyPlanStore = create<StudyPlanStore>((set, get) => {
     },
 
     updateLecture: (lectureId: string, updates: Partial<Lecture>) => {
+      // Convert null to undefined for optional fields
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.grade === null) normalizedUpdates.grade = undefined;
+      if (normalizedUpdates.examDate === null) normalizedUpdates.examDate = undefined;
+      if (normalizedUpdates.passed === null) normalizedUpdates.passed = undefined;
+      if (normalizedUpdates.oralExam === null) normalizedUpdates.oralExam = undefined;
+
       set((state) => {
         const semesters = state.semesters.map((s) => ({
           ...s,
           lectures: s.lectures.map((l) =>
-            l.id === lectureId ? { ...l, ...updates } : l,
+            l.id === lectureId ? { ...l, ...normalizedUpdates } : l,
           ),
         }));
 
         const parkingLot = state.parkingLot.map((l) =>
-          l.id === lectureId ? { ...l, ...updates } : l,
+          l.id === lectureId ? { ...l, ...normalizedUpdates } : l,
         );
 
         return { semesters, parkingLot };
