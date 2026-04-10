@@ -98,7 +98,8 @@ class StudyPlanProvider extends ChangeNotifier {
     if (_baseUrl.isEmpty) {
       return (
         users: const <String>[],
-        error: 'Server-URL nicht konfiguriert. Bitte Server-Einstellungen prüfen.',
+        error:
+            'Server-URL nicht konfiguriert. Bitte Server-Einstellungen prüfen.',
       );
     }
 
@@ -254,7 +255,7 @@ class StudyPlanProvider extends ChangeNotifier {
   }
 
   Future<void> refreshPlanFromServer() async {
-    if (_localMode) return;
+    if (_localMode || _baseUrl.isEmpty) return;
     if (currentUser == null || authToken == null) return;
 
     final r = await _api.getPlan(currentUser!, authToken!);
@@ -279,7 +280,10 @@ class StudyPlanProvider extends ChangeNotifier {
       username: currentUser,
       local: _localMode,
     );
-    if (!_localMode && currentUser != null && authToken != null) {
+    if (!_localMode &&
+        _baseUrl.isNotEmpty &&
+        currentUser != null &&
+        authToken != null) {
       await _api.savePlan(currentUser!, authToken!, _plan.toJson());
     }
     notifyListeners();
@@ -356,7 +360,8 @@ class StudyPlanProvider extends ChangeNotifier {
 
     if (location.semesterId == updated.semesterId) {
       if (location.semesterId != null) {
-        final sem = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+        final sem =
+            _plan.semesters.firstWhere((s) => s.id == location.semesterId);
         sem.lectures[location.index] = updated.copyWith(
           semesterId: location.semesterId,
         );
@@ -383,12 +388,14 @@ class StudyPlanProvider extends ChangeNotifier {
     if (location == null) return;
 
     if (location.semesterId != null) {
-      final sem = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+      final sem =
+          _plan.semesters.firstWhere((s) => s.id == location.semesterId);
       final lecture = sem.lectures[location.index];
       sem.lectures[location.index] = lecture.copyWith(passed: !lecture.passed);
     } else {
       final lecture = _plan.parkingLot[location.index];
-      _plan.parkingLot[location.index] = lecture.copyWith(passed: !lecture.passed);
+      _plan.parkingLot[location.index] =
+          lecture.copyWith(passed: !lecture.passed);
     }
 
     await _save();
@@ -567,8 +574,9 @@ class StudyPlanProvider extends ChangeNotifier {
     bool keepLocalMode = false,
   }) async {
     final users = await _storage.loadLocalUsers();
-    final updatedUsers =
-        users.where((user) => user.username != username).toList(growable: false);
+    final updatedUsers = users
+        .where((user) => user.username != username)
+        .toList(growable: false);
     if (updatedUsers.length == users.length) {
       return 'Benutzer nicht gefunden';
     }
@@ -668,13 +676,15 @@ class StudyPlanProvider extends ChangeNotifier {
 
   ({String? semesterId, int index})? _findLectureLocation(String lectureId) {
     for (final semester in _plan.semesters) {
-      final index = semester.lectures.indexWhere((lecture) => lecture.id == lectureId);
+      final index =
+          semester.lectures.indexWhere((lecture) => lecture.id == lectureId);
       if (index != -1) {
         return (semesterId: semester.id, index: index);
       }
     }
 
-    final parkingIndex = _plan.parkingLot.indexWhere((lecture) => lecture.id == lectureId);
+    final parkingIndex =
+        _plan.parkingLot.indexWhere((lecture) => lecture.id == lectureId);
     if (parkingIndex != -1) {
       return (semesterId: null, index: parkingIndex);
     }
@@ -684,7 +694,8 @@ class StudyPlanProvider extends ChangeNotifier {
 
   void _removeLectureAt(({String? semesterId, int index}) location) {
     if (location.semesterId != null) {
-      final semester = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+      final semester =
+          _plan.semesters.firstWhere((s) => s.id == location.semesterId);
       semester.lectures.removeAt(location.index);
     } else {
       _plan.parkingLot.removeAt(location.index);
@@ -693,7 +704,8 @@ class StudyPlanProvider extends ChangeNotifier {
 
   void _insertLecture(Lecture lecture, String? semesterId) {
     if (semesterId != null) {
-      final semesterIndex = _plan.semesters.indexWhere((s) => s.id == semesterId);
+      final semesterIndex =
+          _plan.semesters.indexWhere((s) => s.id == semesterId);
       if (semesterIndex != -1) {
         _plan.semesters[semesterIndex].lectures.add(
           lecture.copyWith(semesterId: semesterId),

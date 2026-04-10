@@ -43,7 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!provider.localMode && provider.baseUrl.isEmpty) {
       setState(() {
         _users = [];
-        _fetchError = 'Server-URL nicht konfiguriert. Bitte Einstellungen prüfen.';
+        _fetchError =
+            'Server-URL nicht konfiguriert. Bitte Einstellungen prüfen.';
       });
       return;
     }
@@ -177,6 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StudyPlanProvider>();
+    final isBusy = provider.isLoading || _loadingUsers;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -196,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     else if (_showCreate)
                       _buildCreateCard(provider)
                     else
-                      _buildUserListCard(provider),
+                      _buildUserListCard(provider, isBusy),
                     const SizedBox(height: 12),
                     _buildLocalModeButton(provider),
                   ],
@@ -282,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 : _useLocally,
       );
 
-  Widget _buildUserListCard(StudyPlanProvider provider) => Card(
+  Widget _buildUserListCard(StudyPlanProvider provider, bool isBusy) => Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -301,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: const TextStyle(color: Colors.white70, fontSize: 13),
               ),
               const SizedBox(height: 16),
-              if (_loadingUsers)
+              if (isBusy)
                 const Center(child: CircularProgressIndicator())
               else if (_fetchError != null)
                 _buildFetchError(_fetchError!)
@@ -341,13 +343,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               size: 20,
                             ),
                             tooltip: 'Konto löschen',
-                            onPressed: () => _deleteUser(u),
+                            onPressed: isBusy ? null : () => _deleteUser(u),
                           ),
                           const SizedBox(width: 4),
                           const Icon(Icons.arrow_forward_ios, size: 16),
                         ],
                       ),
-                      onTap: () => _loginUser(u),
+                      onTap: isBusy ? null : () => _loginUser(u),
                     );
                   },
                 ),
@@ -361,7 +363,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? 'Neuen lokalen Benutzer erstellen'
                         : 'Neuen Benutzer erstellen',
                   ),
-                  onPressed: provider.localMode || provider.baseUrl.isNotEmpty
+                  onPressed: !isBusy &&
+                          (provider.localMode || provider.baseUrl.isNotEmpty)
                       ? () => setState(() => _showCreate = true)
                       : null,
                 ),
@@ -483,9 +486,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Passwort (optional)',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureNewPw
-                          ? Icons.visibility
-                          : Icons.visibility_off,
+                      _obscureNewPw ? Icons.visibility : Icons.visibility_off,
                     ),
                     onPressed: () =>
                         setState(() => _obscureNewPw = !_obscureNewPw),
