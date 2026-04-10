@@ -52,6 +52,9 @@ const normalizeLecture = (
   }
 
   const lecture = { ...(lectureLike as Lecture) };
+  if (lecture.grade === null) {
+    lecture.grade = undefined;
+  }
   if (semesterId) {
     lecture.semesterId = semesterId;
   } else {
