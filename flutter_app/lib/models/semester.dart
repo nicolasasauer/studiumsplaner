@@ -13,20 +13,32 @@ class Semester {
     List<Lecture>? lectures,
   }) : lectures = lectures ?? [];
 
-  factory Semester.fromJson(Map<String, dynamic> json) => Semester(
-        id: json['id'] as String,
-        number: (json['number'] as num).toInt(),
-        season: json['season'] as String,
-        lectures: ((json['lectures'] as List<dynamic>?) ?? const [])
-            .whereType<Map>()
-            .map((l) {
-              final lecture = Lecture.fromJson(Map<String, dynamic>.from(l));
-              return lecture.semesterId == json['id']
-                  ? lecture
-                  : lecture.copyWith(semesterId: json['id'] as String);
-            })
-            .toList(),
-      );
+  factory Semester.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] is String && (json['id'] as String).isNotEmpty
+        ? json['id'] as String
+        : 'semester-0';
+    final number = json['number'] is num ? (json['number'] as num).toInt() : 0;
+    final season = json['season'] is String &&
+            (json['season'] == 'winter' || json['season'] == 'summer')
+        ? json['season'] as String
+        : 'winter';
+    final lectures = ((json['lectures'] as List<dynamic>?) ?? const [])
+        .whereType<Map>()
+        .map((l) {
+          final lecture = Lecture.fromJson(Map<String, dynamic>.from(l));
+          return lecture.semesterId == id
+              ? lecture
+              : lecture.copyWith(semesterId: id);
+        })
+        .toList();
+
+    return Semester(
+      id: id,
+      number: number,
+      season: season,
+      lectures: lectures,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

@@ -260,9 +260,15 @@ class StudyPlanProvider extends ChangeNotifier {
 
     final r = await _api.getPlan(currentUser!, authToken!);
     if (r.isSuccess && r.data != null) {
-      _plan = StudyPlan.fromJson(r.data!);
-      await _storage.savePlan(_plan, username: currentUser);
-      notifyListeners();
+      try {
+        _plan = StudyPlan.fromJson(r.data!);
+        await _storage.savePlan(_plan, username: currentUser);
+        notifyListeners();
+      } catch (e) {
+        print('Failed to parse server plan: $e');
+      }
+    } else if (r.error != null) {
+      print('Plan refresh failed: ${r.error}');
     }
   }
 
@@ -284,7 +290,10 @@ class StudyPlanProvider extends ChangeNotifier {
         _baseUrl.isNotEmpty &&
         currentUser != null &&
         authToken != null) {
-      await _api.savePlan(currentUser!, authToken!, _plan.toJson());
+      final result = await _api.savePlan(currentUser!, authToken!, _plan.toJson());
+      if (!result.isSuccess) {
+        print('Remote save failed: ${result.error}');
+      }
     }
     notifyListeners();
   }
@@ -452,10 +461,12 @@ class StudyPlanProvider extends ChangeNotifier {
   ) async {
     Lecture? lecture;
     if (fromSemesterId != null) {
-      final sem = _plan.semesters.firstWhere((s) => s.id == fromSemesterId);
-      final idx = sem.lectures.indexWhere((l) => l.id == lectureId);
-      if (idx != -1) {
-        lecture = sem.lectures.removeAt(idx);
+      final sem = _plan.semesters.firstWhereOrNull((s) => s.id == fromSemesterId);
+      if (sem != null) {
+        final idx = sem.lectures.indexWhere((l) => l.id == lectureId);
+        if (idx != -1) {
+          lecture = sem.lectures.removeAt(idx);
+        }
       }
     } else {
       final idx = _plan.parkingLot.indexWhere((l) => l.id == lectureId);
@@ -465,7 +476,24 @@ class StudyPlanProvider extends ChangeNotifier {
     }
 
     if (lecture == null) return;
-    final toSem = _plan.semesters.firstWhere((s) => s.id == toSemesterId);
+
+    final toSem = _plan.semesters.firstWhereOrNull((s) => s.id == toSemesterId);
+    if (toSem == null) {
+      print('Warning: target semester $toSemesterId not found for lecture move');
+      if (fromSemesterId != null) {
+        final origin = _plan.semesters.firstWhereOrNull((s) => s.id == fromSemesterId);
+        if (origin != null) {
+          origin.lectures.add(lecture);
+        } else {
+          _plan.parkingLot.add(lecture.copyWith(semesterId: null));
+        }
+      } else {
+        _plan.parkingLot.add(lecture.copyWith(semesterId: null));
+      }
+      await _save();
+      return;
+    }
+
     toSem.lectures.add(lecture.copyWith(semesterId: toSemesterId));
     await _save();
   }
@@ -474,7 +502,8 @@ class StudyPlanProvider extends ChangeNotifier {
     String lectureId,
     String fromSemesterId,
   ) async {
-    final sem = _plan.semesters.firstWhere((s) => s.id == fromSemesterId);
+    final sem = _plan.semesters.firstWhereOrNull((s) => s.id == fromSemesterId);
+    if (sem == null) return;
     final idx = sem.lectures.indexWhere((l) => l.id == lectureId);
     if (idx == -1) return;
     final lecture = sem.lectures.removeAt(idx);
@@ -483,7 +512,8 @@ class StudyPlanProvider extends ChangeNotifier {
   }
 
   Future<void> sortSemesterLectures(String semesterId, String by) async {
-    final sem = _plan.semesters.firstWhere((s) => s.id == semesterId);
+    final sem = _plan.semesters.firstWhereOrNull((s) => s.id == semesterId);
+    if (sem == null) return;
     if (by == 'date') {
       sem.lectures.sort((a, b) {
         if (a.examDate == null && b.examDate == null) return 0;

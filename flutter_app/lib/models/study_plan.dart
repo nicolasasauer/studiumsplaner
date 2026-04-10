@@ -22,6 +22,18 @@ class StudyPlan {
         parkingLot = parkingLot ?? [];
 
   factory StudyPlan.fromJson(Map<String, dynamic> json) {
+    final planName = json['planName'] is String &&
+            (json['planName'] as String).trim().isNotEmpty
+        ? (json['planName'] as String).trim()
+        : 'Mein Studienplan';
+    final regularSemesters = json['regularSemesters'] is num
+        ? (json['regularSemesters'] as num).toInt()
+        : 6;
+    final startSeason = json['startSeason'] is String &&
+            (json['startSeason'] == 'winter' || json['startSeason'] == 'summer')
+        ? json['startSeason'] as String
+        : 'winter';
+
     final semesters = (json['semesters'] as List<dynamic>?)
             ?.whereType<Map>()
             .map((s) => Semester.fromJson(Map<String, dynamic>.from(s)))
@@ -39,14 +51,18 @@ class StudyPlan {
         semesters.isNotEmpty || parkingLot.isNotEmpty;
 
     return StudyPlan(
-      planName: json['planName'] as String? ?? 'Mein Studienplan',
-      regularSemesters: (json['regularSemesters'] as num?)?.toInt() ?? 6,
-      startSeason: json['startSeason'] as String? ?? 'winter',
+      planName: planName,
+      regularSemesters: regularSemesters,
+      startSeason: startSeason,
       isConfigured: json.containsKey('isConfigured')
-          ? json['isConfigured'] as bool? ?? inferredConfigured
+          ? json['isConfigured'] is bool
+              ? json['isConfigured'] as bool
+              : inferredConfigured
           : inferredConfigured,
       weightAverageGradeByEcts:
-          json['weightAverageGradeByEcts'] as bool? ?? false,
+          json['weightAverageGradeByEcts'] is bool
+              ? json['weightAverageGradeByEcts'] as bool
+              : false,
       semesters: semesters,
       parkingLot: parkingLot,
     );
