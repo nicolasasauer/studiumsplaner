@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:studi_plan/models/lecture.dart';
 import 'package:studi_plan/models/study_plan.dart';
 import 'package:studi_plan/providers/study_plan_provider.dart';
 
@@ -136,6 +137,90 @@ void main() {
       expect(await provider.createUser('Mia', null), isNull);
       expect(provider.currentUser, 'Mia');
       expect(provider.plan.planName, 'Lokaler Altbestand');
+
+      provider.dispose();
+    });
+
+    test('updates a lecture even when it is moved to another semester', () async {
+      SharedPreferences.setMockInitialValues({});
+      final provider = StudyPlanProvider();
+
+      await provider.initialize();
+      await provider.enterLocalMode();
+      await provider.createUser('Dana', null);
+      await provider.initializePlan('Dana Plan', 2, 'winter');
+
+      final original = Lecture(
+        id: 'l1',
+        name: 'Mathe',
+        ects: 5,
+        season: 'winter',
+        color: '#FF6B6B',
+        semesterId: 'semester-1',
+      );
+      await provider.addLecture(original, 'semester-1');
+
+      await provider.updateLecture(
+        original.copyWith(
+          name: 'Mathe II',
+          semesterId: 'semester-2',
+          passed: true,
+        ),
+      );
+
+      final firstSemester = provider.plan.semesters.firstWhere(
+        (semester) => semester.id == 'semester-1',
+      );
+      final secondSemester = provider.plan.semesters.firstWhere(
+        (semester) => semester.id == 'semester-2',
+      );
+
+      expect(firstSemester.lectures, isEmpty);
+      expect(secondSemester.lectures, hasLength(1));
+      expect(secondSemester.lectures.first.name, 'Mathe II');
+      expect(secondSemester.lectures.first.passed, isTrue);
+
+      provider.dispose();
+    });
+
+    test('can toggle a legacy semester lecture by id even without semester hint', () async {
+      SharedPreferences.setMockInitialValues({});
+      final provider = StudyPlanProvider();
+
+      await provider.initialize();
+      await provider.enterLocalMode();
+      await provider.createUser('Elli', null);
+
+      final err = await provider.importJson(jsonEncode({
+        'planName': 'Legacy',
+        'regularSemesters': 1,
+        'startSeason': 'winter',
+        'isConfigured': true,
+        'semesters': [
+          {
+            'id': 'semester-1',
+            'number': 1,
+            'season': 'winter',
+            'lectures': [
+              {
+                'id': 'l1',
+                'name': 'Physik',
+                'ects': 6,
+                'season': 'winter',
+                'color': '#45B7D1',
+              },
+            ],
+          },
+        ],
+        'parkingLot': [],
+      }));
+
+      expect(err, isNull);
+      expect(provider.plan.semesters.first.lectures.first.semesterId, 'semester-1');
+
+      await provider.toggleLecturePassed('l1', null);
+
+      expect(provider.plan.semesters.first.lectures.first.passed, isTrue);
 
       provider.dispose();
     });

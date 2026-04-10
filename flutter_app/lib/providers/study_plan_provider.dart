@@ -335,46 +335,46 @@ class StudyPlanProvider extends ChangeNotifier {
   }
 
   Future<void> updateLecture(Lecture updated) async {
-    if (updated.semesterId != null) {
-      final semIdx = _plan.semesters.indexWhere(
-        (s) => s.id == updated.semesterId,
-      );
-      if (semIdx == -1) return;
-      final sem = _plan.semesters[semIdx];
-      final idx = sem.lectures.indexWhere((l) => l.id == updated.id);
-      if (idx != -1) sem.lectures[idx] = updated;
+    final location = _findLectureLocation(updated.id);
+    if (location == null) return;
+
+    if (location.semesterId == updated.semesterId) {
+      if (location.semesterId != null) {
+        final sem = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+        sem.lectures[location.index] = updated.copyWith(
+          semesterId: location.semesterId,
+        );
+      } else {
+        _plan.parkingLot[location.index] = updated.copyWith(semesterId: null);
+      }
     } else {
-      final idx = _plan.parkingLot.indexWhere((l) => l.id == updated.id);
-      if (idx != -1) _plan.parkingLot[idx] = updated;
+      _removeLectureAt(location);
+      _insertLecture(updated, updated.semesterId);
     }
+
     await _save();
   }
 
   Future<void> removeLecture(String id, String? semesterId) async {
-    if (semesterId != null) {
-      final sem = _plan.semesters.firstWhere((s) => s.id == semesterId);
-      sem.lectures.removeWhere((l) => l.id == id);
-    } else {
-      _plan.parkingLot.removeWhere((l) => l.id == id);
-    }
+    final location = _findLectureLocation(id);
+    if (location == null) return;
+    _removeLectureAt(location);
     await _save();
   }
 
   Future<void> toggleLecturePassed(String id, String? semesterId) async {
-    if (semesterId != null) {
-      final sem = _plan.semesters.firstWhere((s) => s.id == semesterId);
-      final idx = sem.lectures.indexWhere((l) => l.id == id);
-      if (idx != -1) {
-        final l = sem.lectures[idx];
-        sem.lectures[idx] = l.copyWith(passed: !l.passed);
-      }
+    final location = _findLectureLocation(id);
+    if (location == null) return;
+
+    if (location.semesterId != null) {
+      final sem = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+      final lecture = sem.lectures[location.index];
+      sem.lectures[location.index] = lecture.copyWith(passed: !lecture.passed);
     } else {
-      final idx = _plan.parkingLot.indexWhere((l) => l.id == id);
-      if (idx != -1) {
-        final l = _plan.parkingLot[idx];
-        _plan.parkingLot[idx] = l.copyWith(passed: !l.passed);
-      }
+      final lecture = _plan.parkingLot[location.index];
+      _plan.parkingLot[location.index] = lecture.copyWith(passed: !lecture.passed);
     }
+
     await _save();
   }
 
@@ -648,5 +648,44 @@ class StudyPlanProvider extends ChangeNotifier {
     await _storage.saveLocalUsers(const []);
     await _storage.clearUser();
     return const [];
+  }
+
+  ({String? semesterId, int index})? _findLectureLocation(String lectureId) {
+    for (final semester in _plan.semesters) {
+      final index = semester.lectures.indexWhere((lecture) => lecture.id == lectureId);
+      if (index != -1) {
+        return (semesterId: semester.id, index: index);
+      }
+    }
+
+    final parkingIndex = _plan.parkingLot.indexWhere((lecture) => lecture.id == lectureId);
+    if (parkingIndex != -1) {
+      return (semesterId: null, index: parkingIndex);
+    }
+
+    return null;
+  }
+
+  void _removeLectureAt(({String? semesterId, int index}) location) {
+    if (location.semesterId != null) {
+      final semester = _plan.semesters.firstWhere((s) => s.id == location.semesterId);
+      semester.lectures.removeAt(location.index);
+    } else {
+      _plan.parkingLot.removeAt(location.index);
+    }
+  }
+
+  void _insertLecture(Lecture lecture, String? semesterId) {
+    if (semesterId != null) {
+      final semesterIndex = _plan.semesters.indexWhere((s) => s.id == semesterId);
+      if (semesterIndex != -1) {
+        _plan.semesters[semesterIndex].lectures.add(
+          lecture.copyWith(semesterId: semesterId),
+        );
+        return;
+      }
+    }
+
+    _plan.parkingLot.add(lecture.copyWith(semesterId: null));
   }
 }

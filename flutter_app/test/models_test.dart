@@ -159,6 +159,7 @@ void main() {
       expect(restored.semesters, hasLength(1));
       expect(restored.semesters.first.lectures, hasLength(1));
       expect(restored.semesters.first.lectures.first.name, 'Mathe');
+      expect(restored.semesters.first.lectures.first.semesterId, 's1');
     });
 
     test('fromJson infers configured for older persisted plans without flag', () {
@@ -220,6 +221,44 @@ void main() {
       );
       expect(plan.passedEcts, 9); // 4 (parking) + 5 (semester)
       expect(plan.totalEcts, 12);
+    });
+
+    test('fromJson normalizes lecture locations for semester and parking lot', () {
+      final restored = StudyPlan.fromJson({
+        'planName': 'Altbestand',
+        'regularSemesters': 6,
+        'startSeason': 'winter',
+        'isConfigured': true,
+        'semesters': [
+          {
+            'id': 'semester-1',
+            'number': 1,
+            'season': 'winter',
+            'lectures': [
+              {
+                'id': 'l1',
+                'name': 'Mathe',
+                'ects': 5,
+                'season': 'winter',
+                'color': '#FF6B6B',
+              },
+            ],
+          },
+        ],
+        'parkingLot': [
+          {
+            'id': 'p1',
+            'name': 'Seminar',
+            'ects': 3,
+            'season': 'both',
+            'color': '#4ECDC4',
+            'semesterId': 'legacy-semester',
+          },
+        ],
+      });
+
+      expect(restored.semesters.first.lectures.first.semesterId, 'semester-1');
+      expect(restored.parkingLot.first.semesterId, isNull);
     });
 
     test('averageGrade respects ECTS weighting setting', () {

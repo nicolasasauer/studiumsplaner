@@ -29,7 +29,10 @@ class StudyPlan {
         [];
     final parkingLot = (json['parkingLot'] as List<dynamic>?)
             ?.whereType<Map>()
-            .map((l) => Lecture.fromJson(Map<String, dynamic>.from(l)))
+            .map((l) =>
+                Lecture.fromJson(Map<String, dynamic>.from(l)).copyWith(
+                  semesterId: null,
+                ))
             .toList() ??
         [];
     final inferredConfigured =

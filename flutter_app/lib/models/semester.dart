@@ -17,11 +17,15 @@ class Semester {
         id: json['id'] as String,
         number: (json['number'] as num).toInt(),
         season: json['season'] as String,
-        lectures: (json['lectures'] as List<dynamic>?)
-                ?.whereType<Map>()
-                .map((l) => Lecture.fromJson(Map<String, dynamic>.from(l)))
-                .toList() ??
-            [],
+        lectures: ((json['lectures'] as List<dynamic>?) ?? const [])
+            .whereType<Map>()
+            .map((l) {
+              final lecture = Lecture.fromJson(Map<String, dynamic>.from(l));
+              return lecture.semesterId == json['id']
+                  ? lecture
+                  : lecture.copyWith(semesterId: json['id'] as String);
+            })
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
