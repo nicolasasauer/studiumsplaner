@@ -40,7 +40,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _fetchUsers() async {
     final provider = context.read<StudyPlanProvider>();
-    if (!provider.localMode && provider.baseUrl.isEmpty) return;
+    if (!provider.localMode && provider.baseUrl.isEmpty) {
+      setState(() {
+        _users = [];
+        _fetchError = 'Server-URL nicht konfiguriert. Bitte Einstellungen prüfen.';
+      });
+      return;
+    }
 
     setState(() {
       _loadingUsers = true;
@@ -355,7 +361,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? 'Neuen lokalen Benutzer erstellen'
                         : 'Neuen Benutzer erstellen',
                   ),
-                  onPressed: () => setState(() => _showCreate = true),
+                  onPressed: provider.localMode || provider.baseUrl.isNotEmpty
+                      ? () => setState(() => _showCreate = true)
+                      : null,
                 ),
               ),
             ],

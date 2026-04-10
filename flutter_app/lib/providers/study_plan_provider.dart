@@ -35,6 +35,7 @@ class StudyPlanProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoggedIn => currentUser != null;
   bool get localMode => _localMode;
+  bool get canUseRemote => !_localMode && _baseUrl.isNotEmpty;
 
   ApiService get _api => ApiService(_baseUrl);
 
@@ -94,6 +95,13 @@ class StudyPlanProvider extends ChangeNotifier {
       return (users: await getUsers(), error: null);
     }
 
+    if (_baseUrl.isEmpty) {
+      return (
+        users: const <String>[],
+        error: 'Server-URL nicht konfiguriert. Bitte Server-Einstellungen prüfen.',
+      );
+    }
+
     final r = await _api.getUsers();
     return (users: r.data ?? [], error: r.error);
   }
@@ -104,6 +112,10 @@ class StudyPlanProvider extends ChangeNotifier {
     try {
       if (_localMode) {
         return await _loginLocalUser(username, password);
+      }
+
+      if (_baseUrl.isEmpty) {
+        return 'Server-URL nicht konfiguriert';
       }
 
       final r = await _api.login(username, password);
@@ -138,6 +150,10 @@ class StudyPlanProvider extends ChangeNotifier {
     try {
       if (_localMode) {
         return await _createLocalUser(username, password);
+      }
+
+      if (_baseUrl.isEmpty) {
+        return 'Server-URL nicht konfiguriert';
       }
 
       final r = await _api.createUser(username, password);
