@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studi_plan/main.dart';
 import 'package:studi_plan/models/local_user_account.dart';
 import 'package:studi_plan/models/semester.dart';
@@ -60,6 +61,10 @@ class _DelayedStorageService extends StorageService {
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('waits for initialization before showing the login screen', (
     tester,
   ) async {
